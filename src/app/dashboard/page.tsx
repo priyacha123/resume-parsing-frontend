@@ -110,8 +110,8 @@ export default function DashboardPage() {
     setStatusMessage({ text: 'Loaded sample Full Stack Engineer job description.', type: 'info' });
   }
 
-  // Match Calculation Handler
-  async function handleMatch() {
+  // Match Calculation Handler with specific method support
+  async function runMatchWithMethod(selectedMethod: 'hybrid' | 'embedding' | 'tfidf') {
     if (!resumeData?.id) {
       setStatusMessage({ text: 'Please upload and parse a resume first.', type: 'error' });
       return;
@@ -139,12 +139,23 @@ export default function DashboardPage() {
     }
 
     setIsMatching(true);
-    setStatusMessage({ text: 'Analyzing resume against job requirements...', type: 'info' });
+    const methodNames = {
+      hybrid: 'Smart Hybrid',
+      embedding: 'Semantic AI',
+      tfidf: 'Exact Keywords (TF-IDF)'
+    };
+    setStatusMessage({
+      text: `Calculating ${methodNames[selectedMethod]} score and generating model-specific suggestions...`,
+      type: 'info'
+    });
 
     try {
-      const data = await createMatch(resumeData.id, activeJdId, matchMethod);
+      const data = await createMatch(resumeData.id, activeJdId, selectedMethod);
       setMatchResult(data);
-      setStatusMessage({ text: 'Match analysis completed successfully.', type: 'success' });
+      setStatusMessage({
+        text: `Analysis complete: Updated score and suggestions using ${methodNames[selectedMethod]}.`,
+        type: 'success'
+      });
     } catch (err: any) {
       const errorMsg =
         err.response?.data?.error ||
@@ -155,11 +166,47 @@ export default function DashboardPage() {
     }
   }
 
+  function handleMethodChange(newMethod: 'hybrid' | 'embedding' | 'tfidf') {
+    setMatchMethod(newMethod);
+    // If a match is already generated, automatically re-run with the new model so both score & suggestions update!
+    if (matchResult && resumeData?.id && (jdId || jdText.trim())) {
+      runMatchWithMethod(newMethod);
+    }
+  }
+
+  function handleMatch() {
+    runMatchWithMethod(matchMethod);
+  }
+
   // Copy Suggestion to Clipboard
   function handleCopySuggestion(text: string, index: number) {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
+  }
+
+  // Model Info Helper
+  function getMethodInfo(method: string) {
+    const m = (method || '').toLowerCase();
+    if (m.includes('tfidf')) {
+      return {
+        name: 'Exact Keywords (TF-IDF)',
+        focus: 'Evaluated through Keyword Density & ATS Term Matching. Suggestions prioritize missing technical tools, acronyms, and vocabulary placement.',
+        pill: 'bg-purple-50 text-purple-800 border-purple-200',
+      };
+    }
+    if (m.includes('embedding')) {
+      return {
+        name: 'Semantic AI (Dense Vector)',
+        focus: 'Evaluated through Semantic AI & Conceptual Fit. Suggestions prioritize role scope, seniority framing, and experience depth beyond exact keywords.',
+        pill: 'bg-blue-50 text-blue-800 border-blue-200',
+      };
+    }
+    return {
+      name: 'Smart Hybrid Model',
+      focus: 'Evaluated through Balanced Dual-Layer Analysis (65% Semantic + 35% Keywords). Suggestions address both hard keyword gaps and narrative impact.',
+      pill: 'bg-indigo-50 text-indigo-800 border-indigo-200',
+    };
   }
 
   // Score Tone Helpers
@@ -445,7 +492,7 @@ export default function DashboardPage() {
             <div className="inline-flex rounded-md border border-slate-200 p-1 bg-slate-50 text-xs">
               <button
                 type="button"
-                onClick={() => setMatchMethod('hybrid')}
+                onClick={() => handleMethodChange('hybrid')}
                 className={`px-3 py-1.5 rounded font-medium transition-colors ${
                   matchMethod === 'hybrid'
                     ? 'bg-white text-blue-700 shadow-xs border border-slate-200/60 font-semibold'
@@ -456,7 +503,7 @@ export default function DashboardPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setMatchMethod('embedding')}
+                onClick={() => handleMethodChange('embedding')}
                 className={`px-3 py-1.5 rounded font-medium transition-colors ${
                   matchMethod === 'embedding'
                     ? 'bg-white text-blue-700 shadow-xs border border-slate-200/60 font-semibold'
@@ -467,7 +514,7 @@ export default function DashboardPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setMatchMethod('tfidf')}
+                onClick={() => handleMethodChange('tfidf')}
                 className={`px-3 py-1.5 rounded font-medium transition-colors ${
                   matchMethod === 'tfidf'
                     ? 'bg-white text-blue-700 shadow-xs border border-slate-200/60 font-semibold'
@@ -511,14 +558,19 @@ export default function DashboardPage() {
           {/* Result Header & Score Gauge */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-200 gap-4">
             <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Match Report
-              </span>
-              <h2 className="text-xl font-bold text-slate-900 mt-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Match Report
+                </span>
+                <span className={`text-xs px-2 py-0.5 rounded font-medium border ${getMethodInfo(matchResult.method).pill}`}>
+                  {getMethodInfo(matchResult.method).name}
+                </span>
+              </div>
+              <h2 className="text-xl font-bold text-slate-900">
                 ATS Relevance & Gap Analysis
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Evaluated using {matchResult.method.toUpperCase()} scoring
+              <p className="text-xs text-slate-500 mt-1 max-w-xl">
+                {getMethodInfo(matchResult.method).focus}
               </p>
             </div>
 

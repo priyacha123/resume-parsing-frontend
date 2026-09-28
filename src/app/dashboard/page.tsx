@@ -683,6 +683,58 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* Portfolio Project Ideas */}
+          {matchResult.suggestions?.project_ideas && matchResult.suggestions.project_ideas.length > 0 && (
+            <div className="pt-2">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-violet-800">
+                    Project Ideas to Close Gaps
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    New portfolio features tailored to the {getMethodInfo(matchResult.method).name} evaluation.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {matchResult.suggestions.project_ideas.map((project, i) => (
+                  <article key={`${project.title}-${i}`} className="p-4 rounded-lg border border-violet-200 bg-violet-50/40">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <h4 className="text-sm font-bold text-violet-950">{project.title}</h4>
+                      <button
+                        type="button"
+                        onClick={() => handleCopySuggestion(
+                          `${project.title}\n\n${project.rationale}\n\nFeatures: ${project.features.join(', ')}\nTechnologies: ${project.technologies.join(', ')}\nResume value: ${project.resume_value}`,
+                          1000 + i
+                        )}
+                        className="text-xs text-violet-700 hover:text-violet-900 font-medium shrink-0"
+                      >
+                        {copiedIndex === 1000 + i ? 'Copied!' : 'Copy Idea'}
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-700 leading-relaxed mb-3">{project.rationale}</p>
+
+                    <div className="space-y-2 text-xs">
+                      <div>
+                        <span className="font-semibold text-slate-800">Features: </span>
+                        <span className="text-slate-600">{project.features.join(' • ')}</span>
+                      </div>
+                      <div>
+                        <span className="font-semibold text-slate-800">Technologies: </span>
+                        <span className="text-slate-600">{project.technologies.join(', ')}</span>
+                      </div>
+                      <div className="p-2.5 rounded bg-white border border-violet-200 text-slate-700">
+                        <span className="font-semibold text-violet-900">Resume value: </span>
+                        {project.resume_value}
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Section Rewrite Recommendations */}
           {matchResult.suggestions?.suggestions && matchResult.suggestions.suggestions.length > 0 && (
             <div className="pt-2">

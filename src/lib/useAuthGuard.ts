@@ -2,13 +2,23 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { isAuthenticated } from './auth';
+import { restoreSession } from './auth';
 
 export function useAuthGuard() {
   const router = useRouter();
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push('/login');
+    let active = true;
+
+    async function checkSession() {
+      const authenticated = await restoreSession();
+      if (active && !authenticated) {
+        router.replace('/login');
+      }
     }
+
+    checkSession();
+    return () => {
+      active = false;
+    };
   }, [router]);
 }

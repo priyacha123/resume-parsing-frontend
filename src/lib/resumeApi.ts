@@ -24,10 +24,19 @@ export interface SuggestionItem {
   fix: string;
 }
 
+export interface ProjectIdea {
+  title: string;
+  rationale: string;
+  features: string[];
+  technologies: string[];
+  resume_value: string;
+}
+
 export interface MatchSuggestions {
   overall_summary?: string;
   missing_keywords?: string[];
   matched_strengths?: string[];
+  project_ideas?: ProjectIdea[];
   suggestions?: SuggestionItem[];
 }
 

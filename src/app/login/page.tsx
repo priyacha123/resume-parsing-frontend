@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { login, register } from '@/lib/auth';
+import { getApiErrorMessage } from '@/lib/errorMessage';
 
 export default function LoginPage() {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -25,12 +26,11 @@ export default function LoginPage() {
         await login(username, password);
       }
       router.push('/dashboard');
-    } catch (err: any) {
-      const msg =
-        err.response?.data?.error ||
-        err.response?.data?.detail ||
-        'Authentication failed. Please check your credentials.';
-      setError(msg);
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(
+        err,
+        'Authentication failed. Please check your credentials.'
+      ));
     } finally {
       setLoading(false);
     }

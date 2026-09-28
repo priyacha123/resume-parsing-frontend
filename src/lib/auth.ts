@@ -19,13 +19,24 @@ export async function login(username: string, password: string) {
     // /login to /dashboard or any other application route.
     Cookies.set('access_token', access, { expires: 1 / 96, path: '/' }) // ~15 minutes
     Cookies.set('refresh_token', refresh, { expires: 7, path: '/' }) // 7 days
+    window.dispatchEvent(new Event('auth-state-changed'));
 
     return res.data;
 }
 
-export function logout() {
-    Cookies.remove('access_token', { path: '/' });
-    Cookies.remove('refresh_token', { path: '/' });
+export async function logout() {
+    const refresh = Cookies.get('refresh_token');
+    try {
+        if (refresh) {
+            await api.post('/auth/logout/', { refresh });
+        }
+    } catch {
+        // Local token cleanup must still complete if the API is unavailable.
+    } finally {
+        Cookies.remove('access_token', { path: '/' });
+        Cookies.remove('refresh_token', { path: '/' });
+        window.dispatchEvent(new Event('auth-state-changed'));
+    }
 }
 
 export function isAuthenticated() {
@@ -48,9 +59,10 @@ export async function restoreSession() {
         if (res.data.refresh) {
             Cookies.set('refresh_token', res.data.refresh, { expires: 7, path: '/' });
         }
+        window.dispatchEvent(new Event('auth-state-changed'));
         return true;
     } catch {
-        logout();
+        await logout();
         return false;
     }
 }

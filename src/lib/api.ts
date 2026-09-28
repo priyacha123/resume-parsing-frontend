@@ -11,7 +11,7 @@ declare module 'axios' {
 
 const api = axios.create({
   baseURL,
-  timeout: 30000,
+  timeout: 120000,
 });
 
 let refreshRequest: Promise<string | null> | null = null;
@@ -36,6 +36,7 @@ async function refreshAccessToken(): Promise<string | null> {
       .catch(() => {
         Cookies.remove('access_token', { path: '/' });
         Cookies.remove('refresh_token', { path: '/' });
+        window.dispatchEvent(new Event('auth-expired'));
         return null;
       })
       .finally(() => {

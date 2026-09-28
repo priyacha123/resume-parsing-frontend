@@ -9,6 +9,7 @@ import {
   ResumeData,
   MatchResultData
 } from '@/lib/resumeApi';
+import { getApiErrorMessage } from '@/lib/errorMessage';
 
 const SAMPLE_JD_TITLE = 'Full Stack Software Engineer';
 const SAMPLE_JD_COMPANY = 'TechCorp Inc.';
@@ -28,7 +29,7 @@ Requirements:
 - Strong communication and analytical problem-solving skills.`;
 
 export default function DashboardPage() {
-  useAuthGuard();
+  const isCheckingAuth = useAuthGuard();
 
   // State
   const [resumeData, setResumeData] = useState<ResumeData | null>(null);
@@ -62,11 +63,11 @@ export default function DashboardPage() {
         text: `Successfully parsed "${data.original_filename}"${wordCount}.`,
         type: 'success',
       });
-    } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.error ||
-        err.response?.data?.file?.[0] ||
-        'Failed to parse resume. Please check file format and text readability.';
+    } catch (err: unknown) {
+      const errorMsg = getApiErrorMessage(
+        err,
+        'Failed to parse resume. Please check file format and text readability.'
+      );
       setStatusMessage({ text: errorMsg, type: 'error' });
     } finally {
       setIsUploading(false);
@@ -91,11 +92,8 @@ export default function DashboardPage() {
         text: 'Job description saved and ready for matching.',
         type: 'success',
       });
-    } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.error ||
-        err.response?.data?.raw_text?.[0] ||
-        'Failed to save job description.';
+    } catch (err: unknown) {
+      const errorMsg = getApiErrorMessage(err, 'Failed to save job description.');
       setStatusMessage({ text: errorMsg, type: 'error' });
     } finally {
       setIsSavingJd(false);
@@ -131,7 +129,7 @@ export default function DashboardPage() {
         const jd = await createJobDescription(jdTitle, jdCompany, jdText);
         setJdId(jd.id);
         activeJdId = jd.id;
-      } catch (err: any) {
+      } catch {
         setIsMatching(false);
         setStatusMessage({ text: 'Could not save job description before matching.', type: 'error' });
         return;
@@ -156,10 +154,11 @@ export default function DashboardPage() {
         text: `Analysis complete: Updated score and suggestions using ${methodNames[selectedMethod]}.`,
         type: 'success'
       });
-    } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.error ||
-        'Matching process failed. Please ensure both resume and JD contain valid text.';
+    } catch (err: unknown) {
+      const errorMsg = getApiErrorMessage(
+        err,
+        'Matching process failed. Please ensure both resume and JD contain valid text.'
+      );
       setStatusMessage({ text: errorMsg, type: 'error' });
     } finally {
       setIsMatching(false);
@@ -176,6 +175,14 @@ export default function DashboardPage() {
 
   function handleMatch() {
     runMatchWithMethod(matchMethod);
+  }
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center text-sm text-slate-500">
+        Restoring your session...
+      </div>
+    );
   }
 
   // Copy Suggestion to Clipboard
@@ -445,7 +452,10 @@ export default function DashboardPage() {
                 <textarea
                   placeholder="Paste the full job description requirements and responsibilities here..."
                   value={jdText}
-                  onChange={(e) => setJdText(e.target.value)}
+                  onChange={(e) => {
+                    setJdText(e.target.value);
+                    setJdId(null);
+                  }}
                   className="w-full text-xs sm:text-sm px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600 text-slate-900 bg-white h-32 resize-none"
                   required
                 />

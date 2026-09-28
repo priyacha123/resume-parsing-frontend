@@ -9,17 +9,24 @@ import { useState, useEffect } from 'react';
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => (
+    typeof window !== 'undefined' && !!Cookies.get('access_token')
+  ));
 
   useEffect(() => {
-    const token = Cookies.get('access_token');
-    setIsLoggedIn(!!token);
-  }, [pathname]);
+    const syncAuth = () => setIsLoggedIn(!!Cookies.get('access_token'));
+    window.addEventListener('auth-state-changed', syncAuth);
+    window.addEventListener('auth-expired', syncAuth);
+    return () => {
+      window.removeEventListener('auth-state-changed', syncAuth);
+      window.removeEventListener('auth-expired', syncAuth);
+    };
+  }, []);
 
-  function handleLogout() {
-    logout();
+  async function handleLogout() {
+    await logout();
     setIsLoggedIn(false);
-    router.push('/login');
+    router.replace('/login');
   }
 
   return (

@@ -88,19 +88,11 @@ export async function createMatch(
 }
 
 export async function getRecentResumes(): Promise<ResumeData[]> {
-  try {
-    const res = await api.get('/resumes/');
-    return res.data;
-  } catch {
-    return [];
-  }
+  const res = await api.get('/resumes/');
+  return res.data;
 }
 
 export async function getRecentMatches(): Promise<MatchResultData[]> {
-  try {
-    const res = await api.get('/matches/');
-    return res.data;
-  } catch {
-    return [];
-  }
+  const res = await api.get('/matches/');
+  return res.data;
 }

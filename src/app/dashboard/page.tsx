@@ -28,6 +28,38 @@ Requirements:
 - Solid understanding of database indexing, Git version control, and system architecture.
 - Strong communication and analytical problem-solving skills.`;
 
+function groupSuggestions(items: MatchResultData['suggestions']['suggestions'] = []) {
+  const grouped = new Map<string, { section: string; issue: string; fix: string }>();
+  for (const item of items) {
+    const normalized = item.section.trim().toLowerCase().replace(/\s+/g, ' ');
+    const key = normalized.includes('project')
+      ? normalized
+      : normalized.includes('skill') || normalized.includes('keyword') || normalized.includes('technology')
+        ? 'technical skills'
+        : normalized.includes('summary') || normalized.includes('objective')
+          ? 'professional summary'
+          : normalized.includes('experience') || normalized.includes('employment') || normalized.includes('career')
+            ? 'work experience'
+            : normalized.includes('education')
+              ? 'education'
+              : normalized.includes('certif')
+                ? 'certifications'
+                : normalized;
+    const current = grouped.get(key);
+    if (!current) {
+      grouped.set(key, {
+        section: key.includes('project') ? item.section : key.replace(/\b\w/g, (letter) => letter.toUpperCase()),
+        issue: item.issue,
+        fix: item.fix,
+      });
+    } else {
+      current.issue += ` ${item.issue}`;
+      current.fix += ` ${item.fix}`;
+    }
+  }
+  return Array.from(grouped.values());
+}
+
 export default function DashboardPage() {
   const isCheckingAuth = useAuthGuard();
 
@@ -244,6 +276,8 @@ export default function DashboardPage() {
       bar: 'bg-rose-600',
     };
   }
+
+  const displayedSuggestions = groupSuggestions(matchResult?.suggestions?.suggestions);
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
@@ -746,14 +780,14 @@ export default function DashboardPage() {
           )}
 
           {/* Section Rewrite Recommendations */}
-          {matchResult.suggestions?.suggestions && matchResult.suggestions.suggestions.length > 0 && (
+          {displayedSuggestions.length > 0 && (
             <div className="pt-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">
-                Tailored Optimization Recommendations ({matchResult.suggestions.suggestions.length})
+                Tailored Optimization Recommendations ({displayedSuggestions.length})
               </h3>
 
               <div className="space-y-3">
-                {matchResult.suggestions.suggestions.map((s, i) => (
+                {displayedSuggestions.map((s, i) => (
                   <div key={i} className="p-4 rounded-lg border border-slate-200 bg-white shadow-xs">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-bold text-slate-900 px-2 py-0.5 rounded bg-slate-100 border border-slate-200">

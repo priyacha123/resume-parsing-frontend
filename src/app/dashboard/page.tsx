@@ -24,7 +24,7 @@ Key Responsibilities:
 
 Requirements:
 - 3+ years of software development experience with React, TypeScript, and Python.
-- Proven experience with Docker, RESTful APIs, and cloud deployments (AWS, GCP, or Render).
+- Proven experience with Docker, RESTful APIs, and cloud deployments (GCP or Render).
 - Solid understanding of database indexing, Git version control, and system architecture.
 - Strong communication and analytical problem-solving skills.`;
 

@@ -48,12 +48,4 @@ The frontend stores JWT session tokens in root-scoped browser cookies, refreshes
 4. Select TF-IDF, semantic embedding, or hybrid matching.
 5. Review the score, missing keywords, matched proficiencies, recommendations, and two project ideas.
 
-## Render deployment
 
-Create a separate Render Web Service using this directory as the root:
-
-- Build command: `npm ci && npm run build`
-- Start command: `npm run start`
-- Environment variable: `NEXT_PUBLIC_API_URL=https://your-backend.onrender.com/api`
-
-The backend must allow the frontend deployment URL in its `CORS_ALLOWED_ORIGINS` setting.

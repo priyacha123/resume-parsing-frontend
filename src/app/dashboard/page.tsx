@@ -28,38 +28,6 @@ Requirements:
 - Solid understanding of database indexing, Git version control, and system architecture.
 - Strong communication and analytical problem-solving skills.`;
 
-function groupSuggestions(items: MatchResultData['suggestions']['suggestions'] = []) {
-  const grouped = new Map<string, { section: string; issue: string; fix: string }>();
-  for (const item of items) {
-    const normalized = item.section.trim().toLowerCase().replace(/\s+/g, ' ');
-    const key = normalized.includes('project')
-      ? normalized
-      : normalized.includes('skill') || normalized.includes('keyword') || normalized.includes('technology')
-        ? 'technical skills'
-        : normalized.includes('summary') || normalized.includes('objective')
-          ? 'professional summary'
-          : normalized.includes('experience') || normalized.includes('employment') || normalized.includes('career')
-            ? 'work experience'
-            : normalized.includes('education')
-              ? 'education'
-              : normalized.includes('certif')
-                ? 'certifications'
-                : normalized;
-    const current = grouped.get(key);
-    if (!current) {
-      grouped.set(key, {
-        section: key.includes('project') ? item.section : key.replace(/\b\w/g, (letter) => letter.toUpperCase()),
-        issue: item.issue,
-        fix: item.fix,
-      });
-    } else {
-      current.issue += ` ${item.issue}`;
-      current.fix += ` ${item.fix}`;
-    }
-  }
-  return Array.from(grouped.values());
-}
-
 export default function DashboardPage() {
   const isCheckingAuth = useAuthGuard();
 
@@ -277,7 +245,7 @@ export default function DashboardPage() {
     };
   }
 
-  const displayedSuggestions = groupSuggestions(matchResult?.suggestions?.suggestions);
+  const displayedSuggestions = (matchResult?.suggestions?.suggestions || []).slice(0, 10);
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
@@ -783,7 +751,7 @@ export default function DashboardPage() {
           {displayedSuggestions.length > 0 && (
             <div className="pt-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">
-                Tailored Optimization Recommendations ({displayedSuggestions.length})
+                Tailored Optimization Recommendations ({displayedSuggestions.length}/10)
               </h3>
 
               <div className="space-y-3">
@@ -816,8 +784,16 @@ export default function DashboardPage() {
                     </p>
 
                     <div className="p-2.5 rounded bg-slate-50 border border-slate-200 text-xs text-slate-900 leading-relaxed font-sans">
-                      <span className="font-semibold text-emerald-800 mr-1.5">Recommended Fix:</span>
-                      {s.fix}
+                      <span className="font-semibold text-emerald-800 block mb-1.5">
+                        Recommended Improvements:
+                      </span>
+                      <ul className="list-disc pl-4 space-y-1">
+                        {(s.recommendations?.length ? s.recommendations : [s.fix])
+                          .slice(0, 5)
+                          .map((recommendation, recommendationIndex) => (
+                            <li key={recommendationIndex}>{recommendation}</li>
+                          ))}
+                      </ul>
                     </div>
                   </div>
                 ))}

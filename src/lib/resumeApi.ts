@@ -22,6 +22,7 @@ export interface SuggestionItem {
   section: string;
   issue: string;
   fix: string;
+  recommendations?: string[];
 }
 
 export interface ProjectIdea {
